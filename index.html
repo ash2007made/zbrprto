@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zeebraとの相性診断</title>
+  <style>
+    :root {
+      --ink: #1E1E1E;
+      --blue:  #623F8C;
+      --purple: #0C4693;
+      --wine: #AE415E;
+      --lime: #BEC94E;
+      --mid-gray: #888888;
+      --dark-gray: #3D3D3D;
+      --light-gray: #EAEAEA;
+      --pale-gray: #F6F6F6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100svh; color: var(--ink); background: linear-gradient(145deg, #EAEAEA, #C4C4C4); font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; }
+    main { width: min(100%, 460px); min-height: 100svh; margin: auto; padding: 28px 20px 36px; display: flex; flex-direction: column; justify-content: center; }
+    h1 { margin: 0 0 10px; color: var(--blue); font-size: clamp(1.8rem, 8vw, 2.45rem); text-align: center; letter-spacing: .03em; }
+    .lead { margin: 0 0 28px; text-align: center; line-height: 1.8; color: var(--dark-gray); }
+    .card { padding: 26px 20px; background: rgba(255,255,255,.94); border: 1px solid rgba(61,61,61,.12); border-radius: 24px; box-shadow: 0 12px 35px rgba(30,30,30,.15); }
+    .counter { margin: 0 0 18px; font-size: .9rem; color: var(--mid-gray); text-align: center; }
+    .question { margin: 0; font-size: clamp(1.2rem, 5.5vw, 1.48rem); line-height: 1.7; font-weight: 700; }
+    .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 28px; }
+    button { appearance: none; border: 0; border-radius: 14px; padding: 16px 10px; font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: transform .12s, opacity .12s; }
+    button:active { transform: scale(.97); }
+    .yes { background: var(--blue); color: white; }
+    .no { background: var(--light-gray); color: var(--dark-gray); }
+    .restart { background: var(--wine); color: white; }
+    .result { display: none; }
+    .result h2 { margin: 0 0 16px; font-size: 1.55rem; line-height: 1.55; }
+    .types { margin: 0; padding: 0; list-style: none; }
+    .types li { margin: 10px 0; padding: 13px 15px; border-radius: 13px; background: #E7EDF7; border-left: 6px solid var(--blue); font-weight: 700; }
+    .types li:nth-child(2n) { background: #F0EAF6; border-left-color: var(--purple); }
+    .types li:nth-child(3n) { background: #F8E9ED; border-left-color: var(--wine); }
+    .types li:nth-child(4n) { background: #F3F5D9; border-left-color: var(--lime); }
+    .result .restart { width: 100%; margin-top: 22px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>zeebraとの相性診断</h1>
+    <p class="lead">全6つの質問に回答してください</p>
+
+    <section class="card" id="quiz" aria-live="polite">
+      <p class="counter" id="counter"></p>
+      <p class="question" id="question"></p>
+      <div class="answers">
+        <button class="yes" type="button" onclick="answer(true)">はい</button>
+        <button class="no" type="button" onclick="answer(false)">いいえ</button>
+      </div>
+    </section>
+
+    <section class="card result" id="result" aria-live="polite">
+      <h2 id="resultTitle"></h2>
+      <ul class="types" id="types"></ul>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { text: "やりたいことがあるが、周囲の評価を気にして行動できない", type: "周囲の目ブレーキ型" },
+      { text: "失敗を考えて不安になってしまい、なかなか行動に移せない", type: "失敗回避型" },
+      { text: "「自分ならできる」と思えるまで物事を始められない", type: "自信待ち型" },
+      { text: "周りと自分を比較して「自分にはまだ無理」と考えてしまい、行動に移せない", type: "比較ブレーキ型" },
+      { text: "もっと準備してからやろうと思って、ついつい物事を先延ばしにしがちだ", type: "準備しすぎ型" },
+      { text: "自分のやりたいことが明確でないまま物事を行い、迷走してしまいがちだ", type: "方向性迷子型" }
+    ];
+
+    let current = 0;
+    let selectedTypes = [];
+
+    function renderQuestion() {
+      document.getElementById("counter").textContent = `質問 ${current + 1} / ${questions.length}`;
+      document.getElementById("question").textContent = questions[current].text;
+    }
+
+    function answer(isYes) {
+      if (isYes) selectedTypes.push(questions[current].type);
+      current += 1;
+      if (current < questions.length) renderQuestion();
+      else showResult();
+    }
+
+    function showResult() {
+      document.getElementById("quiz").classList.add("hidden");
+      document.getElementById("result").style.display = "block";
+      const list = document.getElementById("types");
+      list.innerHTML = "";
+      if (selectedTypes.length === 0) selectedTypes = ["虚無型"];
+      document.getElementById("resultTitle").textContent = `あなたは、${selectedTypes.join("・")}です`;
+      selectedTypes.forEach(type => {
+        const item = document.createElement("li");
+        item.textContent = type;
+        list.appendChild(item);
+      });
+    }
+
+    function restartQuiz() {
+      current = 0;
+      selectedTypes = [];
+      document.getElementById("result").style.display = "none";
+      document.getElementById("quiz").classList.remove("hidden");
+      renderQuestion();
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
